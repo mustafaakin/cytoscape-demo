@@ -3,13 +3,76 @@
 <head>
     <title>Labels demo</title>
     <link href="style.css" rel="stylesheet"/>
+    <script src="papaparse.min.js"></script>
     <script src="polyfill.min.js"></script>
     <script src="cytoscape.min.js"></script>
     <script src="cytoscape-cose-bilkent.js"></script>
+    <script>
+        function onChooseFile(event) {
+            let input = event.target;
+            let file = input.files[0];
+            let fr = new FileReader();
+            fr.onload = function (ev) {
+                const data = ev.target.result
+                const results = Papa.parse(data);
+                const table = results.data.splice(1)
+                const graph = table.filter(a => a.length === 3).map(a => {
+                    console.log(a)
+                    return {src: a[0], dst: a[1], edge: a[2]}
+                })
+
+                draw(graph)
+            }
+            fr.readAsText(file, "Windows-1254");
+        }
+
+        function draw(data) {
+            const nodes = data.flatMap(a => {
+                return [
+                    {data: {id: a.src, label: a.src}},
+                    {data: {id: a.dst, label: a.dst}},
+                ]
+            })
+            const edges = data.map(a => {
+                return {data: {source: a.src, target: a.dst, label: a.edge}}
+            })
+
+            window.cy = cytoscape({
+                container: document.getElementById('cy'),
+
+                layout: {
+                    name: 'concentric',
+                },
+
+                style: [
+                    {
+                        "selector": "node[label]",
+                        "style": {
+                            "label": "data(label)",
+                            "font-size": "8px",
+                            "color": "red"
+
+                        }
+                    },
+                    {
+                        "selector": "edge[label]",
+                        "style": {
+                            "label": "data(label)",
+                            "width": 3,
+                            "font-size": "8px"
+                        }
+                    },
+                ],
+                elements: [...nodes, ...edges]
+            });
+        }
+    </script>
 </head>
 <body>
-<h1>Labels demo</h1>
-<div id="cy"></div>
+<h1>Mustafa</h1>
+<input type='file' onchange='onChooseFile(event)'/>
+<hr/>
+<div id="cy" style="margin-top: 60px"></div>
 <script src="code.js"></script>
 </body>
 </html>
